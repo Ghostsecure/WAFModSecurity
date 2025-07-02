@@ -1,0 +1,33 @@
+version: '3'
+services:
+  waf-dashboard:
+    build:
+      context: .
+      dockerfile: apache-modsec/Dockerfile.combined
+    ports:
+      - "8880:8880"   # Apache port /backend de prueba
+      - "8000:8000"   # Dashboard port
+#      - "8881:8881"   #DVWA
+#      - "8882:8882"   #Mutillidae
+    depends_on:
+      - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./apache-modsec/logs:/var/log/apache2
+      - ./dashboard:/app
+      - modsec-rules:/usr/share/modsecurity-crs/rules
+#      - ./apache-modsec/apache-config/myapp.conf:/etc/apache2/sites-enabled
+    environment:
+      - LOG_FILE_PATH=/var/log/apache2/modsec_audit.log
+      - PYTHONUNBUFFERED=1
+  backend:
+    build: ./backend
+    ports:
+      - "8088:8088"
+networks:
+  waf-net:
+    driver: bridge
+
+volumes:
+  modsec-rules:
